@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <iostream>
 
-#include "nvcomp/lz4.h"
+#include "nvcomp/snappy.h"
 
 /* 
   To build, execute
@@ -59,13 +59,13 @@ void execute_example(char* input_data, const size_t in_bytes)
 
   // Then we need to allocate the temporary workspace and output space needed by the compressor.
   size_t temp_bytes;
-  nvcompBatchedLZ4CompressGetTempSize(batch_size, chunk_size, nvcompBatchedLZ4DefaultOpts, &temp_bytes);
+  nvcompBatchedSnappyCompressGetTempSize(batch_size, chunk_size, nvcompBatchedSnappyDefaultOpts, &temp_bytes);
   void* device_temp_ptr;
   cudaMalloc(&device_temp_ptr, temp_bytes);
 
   // get the maxmimum output size for each chunk
   size_t max_out_bytes;
-  nvcompBatchedLZ4CompressGetMaxOutputChunkSize(chunk_size, nvcompBatchedLZ4DefaultOpts, &max_out_bytes);
+  nvcompBatchedSnappyCompressGetMaxOutputChunkSize(chunk_size, nvcompBatchedSnappyDefaultOpts, &max_out_bytes);
 
   // Next, allocate output space on the device
   void ** host_compressed_ptrs;
@@ -85,7 +85,7 @@ void execute_example(char* input_data, const size_t in_bytes)
   cudaMalloc((void**)&device_compressed_bytes, sizeof(size_t) * batch_size);
 
   // And finally, call the API to compress the data
-  nvcompStatus_t comp_res = nvcompBatchedLZ4CompressAsync(  
+  nvcompStatus_t comp_res = nvcompBatchedSnappyCompressAsync(  
       device_uncompressed_ptrs,    
       device_uncompressed_bytes,  
       chunk_size, // The maximum chunk size  
@@ -94,7 +94,7 @@ void execute_example(char* input_data, const size_t in_bytes)
       temp_bytes,  
       device_compressed_ptrs,  
       device_compressed_bytes,  
-      nvcompBatchedLZ4DefaultOpts,  
+      nvcompBatchedSnappyDefaultOpts,  
       stream);
 
   if (comp_res != nvcompSuccess)
@@ -109,7 +109,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 
   // If we didn't have the uncompressed sizes, we'd need to compute this information here. 
   // We demonstrate how to do this.
-  nvcompBatchedLZ4GetDecompressSizeAsync(
+  nvcompBatchedSnappyGetDecompressSizeAsync(
       device_compressed_ptrs,
       device_compressed_bytes,
       device_uncompressed_bytes,
@@ -118,7 +118,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 
   // Next, allocate the temporary buffer 
   size_t decomp_temp_bytes;
-  nvcompBatchedLZ4DecompressGetTempSize(batch_size, chunk_size, &decomp_temp_bytes);
+  nvcompBatchedSnappyDecompressGetTempSize(batch_size, chunk_size, &decomp_temp_bytes);
   void * device_decomp_temp;
   cudaMalloc(&device_decomp_temp, decomp_temp_bytes);
 
@@ -136,7 +136,7 @@ void execute_example(char* input_data, const size_t in_bytes)
   // This decompresses each input, device_compressed_ptrs[i], and places the decompressed
   // result in the corresponding output list, device_uncompressed_ptrs[i]. It also writes
   // the size of the uncompressed data to device_uncompressed_bytes[i].
-  nvcompStatus_t decomp_res = nvcompBatchedLZ4DecompressAsync(
+  nvcompStatus_t decomp_res = nvcompBatchedSnappyDecompressAsync(
       device_compressed_ptrs, 
       device_compressed_bytes, 
       device_uncompressed_bytes, 
