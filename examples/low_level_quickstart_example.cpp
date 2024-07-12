@@ -92,6 +92,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 
     auto stop_setup = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop_setup - start_setup);
+    auto total_time = duration.count();
     std::cout << "setup time: " << duration.count() << std::endl;
 
     auto start_compress = high_resolution_clock::now();
@@ -115,6 +116,7 @@ void execute_example(char* input_data, const size_t in_bytes)
     assert(comp_res == nvcompSuccess);
   }
     duration = duration_cast<microseconds>(stop_compress- start_compress);
+    total_time += duration.count();
     std::cout << "compression time: " << duration.count() << std::endl;
 
     auto start_decompress = high_resolution_clock::now();
@@ -171,7 +173,9 @@ void execute_example(char* input_data, const size_t in_bytes)
     assert(decomp_res == nvcompSuccess);
   }
   duration = duration_cast<microseconds>(stop_decompress- start_decompress);
+  total_time += duration.count();
   std::cout << "decompression time: " << duration.count() << std::endl;
+  std::cout << "total time: " << total_time << std::endl;
 
 
   cudaStreamSynchronize(stream);
