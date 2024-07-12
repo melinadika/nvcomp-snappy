@@ -1,6 +1,9 @@
 #include <random>
 #include <assert.h>
 #include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
 
 #include "nvcomp/snappy.h"
 #include <chrono>
