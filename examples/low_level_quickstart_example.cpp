@@ -23,11 +23,12 @@ using namespace std::chrono;
 
 void execute_example(char* input_data, const size_t in_bytes)
 {
+   auto start_setup = high_resolution_clock::now();
+
   cudaStream_t stream;
   cudaStreamCreate(&stream);
 
   // First, initialize the data on the host.
-    auto start_setup = high_resolution_clock::now();
   // compute chunk sizes
   size_t* host_uncompressed_bytes;
   const size_t chunk_size = 65536;
@@ -197,7 +198,7 @@ int main()
   data [input.size()] = '\0';
 
   std::cout << "Input size: " << input.size() << std::endl;
-  
+
   execute_example(data, input.size()+1);
   free(data);
   return 0;
