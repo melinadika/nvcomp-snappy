@@ -179,18 +179,6 @@ void execute_example(char* input_data, const size_t in_bytes)
 int main()
 {
 
- std::ifstream inputFile("./enwik8",  std::ios::binary);
-    if (!inputFile) {
-        std::cerr << "Error opening file" << std::endl;
-        return 1;
-    }
-
-    std::stringstream buffer;
-    buffer << inputFile.rdbuf();
-    std::string input = buffer.str();
-  
-    std::cout << "input size: " << input.size() << std::endl;
-
     std::ifstream inputFile("test.txt",  std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file" << std::endl;
