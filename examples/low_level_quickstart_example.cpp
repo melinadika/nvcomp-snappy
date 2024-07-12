@@ -178,6 +178,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 
 int main()
 {
+
  std::ifstream inputFile("./enwik8",  std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file" << std::endl;
@@ -190,7 +191,25 @@ int main()
   
     std::cout << "input size: " << input.size() << std::endl;
 
-  execute_example(input.data(), input.size());
+    std::ifstream inputFile("test.txt",  std::ios::binary);
+    if (!inputFile) {
+        std::cerr << "Error opening file" << std::endl;
+        return 1;
+    }
+
+    std::stringstream buffer;
+    buffer << inputFile.rdbuf();
+    std::string input = buffer.str();
+
+  char* data = (char *)malloc((input.size()+1) * sizeof(char));
+  for (int i = 0; i < input.size(); i++) {
+    data[i] = input.data()[i];
+  }
+
+  data [input.size()] = '\0';
+
+  execute_example(data, input.size()+1);
+  free(data);
   return 0;
   
 }
