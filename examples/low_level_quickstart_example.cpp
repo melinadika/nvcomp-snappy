@@ -168,7 +168,6 @@ void execute_example(char* input_data, const size_t in_bytes)
   }
   duration = duration_cast<microseconds>(stop_decompress- start_decompress);
   std::cout << "decompression time: " << duration.count() << std::endl;
-  printf("It ran");
 
 
   cudaStreamSynchronize(stream);
@@ -186,6 +185,8 @@ int main()
     buffer << inputFile.rdbuf();
     std::string input = buffer.str();
   
+    std::cout << "input size: " << input.size() << std::endl;
+
   execute_example(input.data(), input.size());
   return 0;
   
