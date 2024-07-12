@@ -179,7 +179,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 int main()
 {
 
-    std::ifstream inputFile("test.txt",  std::ios::binary);
+    std::ifstream inputFile("../enwik8",  std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file" << std::endl;
         return 1;
