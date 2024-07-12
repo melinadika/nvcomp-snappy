@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "nvcomp/snappy.h"
+#include <chrono>
+using namespace std::chrono;
 
 /* 
   To build, execute
@@ -22,7 +24,7 @@ void execute_example(char* input_data, const size_t in_bytes)
   cudaStreamCreate(&stream);
 
   // First, initialize the data on the host.
-
+    auto start_setup = high_resolution_clock::now();
   // compute chunk sizes
   size_t* host_uncompressed_bytes;
   const size_t chunk_size = 65536;
@@ -84,6 +86,11 @@ void execute_example(char* input_data, const size_t in_bytes)
   size_t * device_compressed_bytes;
   cudaMalloc((void**)&device_compressed_bytes, sizeof(size_t) * batch_size);
 
+    auto stop_setup = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop_setup - start_setup);
+    cout << "setup time: " << duration << endl;
+
+    auto start_compress = high_resolution_clock::now();
   // And finally, call the API to compress the data
   nvcompStatus_t comp_res = nvcompBatchedSnappyCompressAsync(  
       device_uncompressed_ptrs,    
@@ -96,13 +103,17 @@ void execute_example(char* input_data, const size_t in_bytes)
       device_compressed_bytes,  
       nvcompBatchedSnappyDefaultOpts,  
       stream);
+    auto stop_compress = high_resolution_clock::now();
 
   if (comp_res != nvcompSuccess)
   {
     std::cerr << "Failed compression!" << std::endl;
     assert(comp_res == nvcompSuccess);
   }
+    auto duration = duration_cast<microseconds>(stop_compress- start_compress);
+    cout << "compression time: " << duration << endl;
 
+    auto start_decompress = high_resolution_clock::now();
   // Decompression can be similarly performed on a batch of multiple compressed input chunks. 
   // As no metadata is stored with the compressed data, chunks can be re-arranged as well as decompressed 
   // with other chunks that originally were not compressed in the same batch.
@@ -148,11 +159,15 @@ void execute_example(char* input_data, const size_t in_bytes)
       device_statuses, 
       stream);
   
+    auto stop_decompress = high_resolution_clock::now();
+
   if (decomp_res != nvcompSuccess)
   {
     std::cerr << "Failed compression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
+   auto duration = duration_cast<microseconds>(stop_decompress- start_decompress);
+    cout << "decompression time: " << duration << endl;
 
   cudaStreamSynchronize(stream);
 }
