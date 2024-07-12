@@ -196,6 +196,8 @@ int main()
 
   data [input.size()] = '\0';
 
+  std::cout << "Input size: " << input.size() << std::endl;
+  
   execute_example(data, input.size()+1);
   free(data);
   return 0;
