@@ -88,7 +88,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 
     auto stop_setup = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop_setup - start_setup);
-    std::cout << "setup time: " << duration << std::endl;
+    std::cout << "setup time: " << duration.count() << std::endl;
 
     auto start_compress = high_resolution_clock::now();
   // And finally, call the API to compress the data
@@ -111,7 +111,7 @@ void execute_example(char* input_data, const size_t in_bytes)
     assert(comp_res == nvcompSuccess);
   }
     auto duration = duration_cast<microseconds>(stop_compress- start_compress);
-    std::cout << "compression time: " << duration << std::endl;
+    std::cout << "compression time: " << duration.count() << std::endl;
 
     auto start_decompress = high_resolution_clock::now();
   // Decompression can be similarly performed on a batch of multiple compressed input chunks. 
@@ -167,7 +167,7 @@ void execute_example(char* input_data, const size_t in_bytes)
     assert(decomp_res == nvcompSuccess);
   }
    auto duration = duration_cast<microseconds>(stop_decompress- start_decompress);
-  std::cout << "decompression time: " << duration << std::endl;
+  std::cout << "decompression time: " << duration.count() << std::endl;
   printf("It ran");
 
 
