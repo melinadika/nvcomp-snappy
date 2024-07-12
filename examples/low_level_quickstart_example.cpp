@@ -110,7 +110,7 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cerr << "Failed compression!" << std::endl;
     assert(comp_res == nvcompSuccess);
   }
-    auto duration = duration_cast<microseconds>(stop_compress- start_compress);
+    duration = duration_cast<microseconds>(stop_compress- start_compress);
     std::cout << "compression time: " << duration.count() << std::endl;
 
     auto start_decompress = high_resolution_clock::now();
@@ -166,7 +166,7 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cerr << "Failed compression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
-   auto duration = duration_cast<microseconds>(stop_decompress- start_decompress);
+  duration = duration_cast<microseconds>(stop_decompress- start_decompress);
   std::cout << "decompression time: " << duration.count() << std::endl;
   printf("It ran");
 
