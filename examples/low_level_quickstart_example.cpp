@@ -176,6 +176,7 @@ int main()
   }
   
   execute_example(uncompressed_data, in_bytes);
+  printf("It ran");
   return 0;
   
 }
