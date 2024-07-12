@@ -167,7 +167,9 @@ void execute_example(char* input_data, const size_t in_bytes)
     assert(decomp_res == nvcompSuccess);
   }
    auto duration = duration_cast<microseconds>(stop_decompress- start_decompress);
-    cout << "decompression time: " << duration << endl;
+  cout << "decompression time: " << duration << endl;
+  printf("It ran");
+
 
   cudaStreamSynchronize(stream);
 }
@@ -191,7 +193,6 @@ int main()
   }
   
   execute_example(uncompressed_data, in_bytes);
-  printf("It ran");
   return 0;
   
 }
