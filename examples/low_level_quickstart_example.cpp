@@ -97,9 +97,9 @@ void execute_example(char* input_data, const size_t in_bytes)
   cudaMalloc((void**)&device_compressed_bytes, sizeof(size_t) * batch_size);
 
     auto stop_setup = high_resolution_clock::now();
-    auto duration = duration_cast<seconds>(stop_setup - start_setup);
+    auto duration = duration_cast<milisecondsseconds>(stop_setup - start_setup);
     auto total_time = duration.count();
-    std::cout << "setup time: " << duration.count() << "s" << std::endl;
+    std::cout << "setup time: " << duration.count() << "ms" << std::endl;
 
     auto start_compress = high_resolution_clock::now();
 
@@ -123,9 +123,9 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cerr << "Failed compression!" << std::endl;
     assert(comp_res == nvcompSuccess);
   }
-    duration = duration_cast<seconds>(stop_compress- start_compress);
+    duration = duration_cast<miliseconds>(stop_compress- start_compress);
     total_time += duration.count();
-    std::cout << "compression time: " << duration.count() << "s" << std::endl;
+    std::cout << "compression time: " << duration.count() << "ms" << std::endl;
 
     auto start_decompress = high_resolution_clock::now();
   // Decompression can be similarly performed on a batch of multiple compressed input chunks. 
@@ -184,10 +184,10 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cerr << "Failed compression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
-  duration = duration_cast<seconds>(stop_decompress- start_decompress);
+  duration = duration_cast<miliseconds>(stop_decompress- start_decompress);
   total_time += duration.count();
-  std::cout << "decompression time: " << duration.count() << "s" << std::endl;
-  std::cout << "total time: " << total_time << "s" << std::endl;
+  std::cout << "decompression time: " << duration.count() << "ms" << std::endl;
+  std::cout << "total time: " << total_time << "ms" << std::endl;
 
 
   cudaStreamSynchronize(stream);
