@@ -193,11 +193,13 @@ void execute_example(char* input_data, const size_t in_bytes)
   cudaStreamSynchronize(stream);
 }
 
-int main()
+int main(int argc, char **argv)
 {
 
+  file = "/content/enwik8"
+  if (argc > 1) file = argv[1];
   // read input file + format input data 
-    std::ifstream inputFile("/content/enwik8",  std::ios::binary);
+    std::ifstream inputFile(file,  std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file" << std::endl;
         return 1;
