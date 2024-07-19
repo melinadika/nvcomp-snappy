@@ -196,7 +196,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 int main(int argc, char **argv)
 {
 
-  auto file = "/content/enwik8"
+  auto file = "/content/enwik8";
   if (argc > 1) file = argv[1];
   // read input file + format input data 
     std::ifstream inputFile(file,  std::ios::binary);
