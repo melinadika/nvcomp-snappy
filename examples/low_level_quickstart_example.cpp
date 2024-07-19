@@ -25,6 +25,7 @@ void execute_example(char* input_data, const size_t in_bytes)
 {
    auto start_setup = high_resolution_clock::now();
 
+  // allows for concurent cuda processes
   cudaStream_t stream;
   cudaStreamCreate(&stream);
 
@@ -36,8 +37,10 @@ void execute_example(char* input_data, const size_t in_bytes)
 
   char* device_input_data;
   cudaMalloc((void**)&device_input_data, in_bytes);
+  // non-blocking
   cudaMemcpyAsync(device_input_data, input_data, in_bytes, cudaMemcpyHostToDevice, stream);
 
+  // set up data structures 
   cudaMallocHost((void**)&host_uncompressed_bytes, sizeof(size_t)*batch_size);
   for (size_t i = 0; i < batch_size; ++i) {
     if (i + 1 < batch_size) {
@@ -60,17 +63,20 @@ void execute_example(char* input_data, const size_t in_bytes)
   cudaMalloc((void**)&device_uncompressed_bytes, sizeof(size_t) * batch_size);
   cudaMalloc((void**)&device_uncompressed_ptrs, sizeof(size_t) * batch_size);
   
+  // non-blocking
   cudaMemcpyAsync(device_uncompressed_bytes, host_uncompressed_bytes, sizeof(size_t) * batch_size, cudaMemcpyHostToDevice, stream);
   cudaMemcpyAsync(device_uncompressed_ptrs, host_uncompressed_ptrs, sizeof(size_t) * batch_size, cudaMemcpyHostToDevice, stream);
 
   // Then we need to allocate the temporary workspace and output space needed by the compressor.
   size_t temp_bytes;
+  // is always 0 - snappy doesn't need working memory
   nvcompBatchedSnappyCompressGetTempSize(batch_size, chunk_size, nvcompBatchedSnappyDefaultOpts, &temp_bytes);
   void* device_temp_ptr;
   cudaMalloc(&device_temp_ptr, temp_bytes);
 
   // get the maxmimum output size for each chunk
   size_t max_out_bytes;
+  // estimates using same logic as google snappy
   nvcompBatchedSnappyCompressGetMaxOutputChunkSize(chunk_size, nvcompBatchedSnappyDefaultOpts, &max_out_bytes);
 
   // Next, allocate output space on the device
@@ -96,6 +102,7 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cout << "setup time: " << duration.count() << "ms" << std::endl;
 
     auto start_compress = high_resolution_clock::now();
+
   // And finally, call the API to compress the data
   nvcompStatus_t comp_res = nvcompBatchedSnappyCompressAsync(  
       device_uncompressed_ptrs,    
@@ -108,6 +115,7 @@ void execute_example(char* input_data, const size_t in_bytes)
       device_compressed_bytes,  
       nvcompBatchedSnappyDefaultOpts,  
       stream);
+      // nvcompBatchedSnappyCompressAsync() -> gpu_snap() -> snap_kernel<<<>>>() -> do_snap()
     auto stop_compress = high_resolution_clock::now();
 
   if (comp_res != nvcompSuccess)
@@ -132,9 +140,12 @@ void execute_example(char* input_data, const size_t in_bytes)
       device_uncompressed_bytes,
       batch_size,
       stream);
+      // nvcompBatchedSnappyGetDecompressSizeAsync() -> gpu_get_uncompressed_sizes() -> get_uncompressed_sizes_kernel<<<>>>()
+      // work only done by thread 0 -> load to GPU to make asynch?
 
   // Next, allocate the temporary buffer 
   size_t decomp_temp_bytes;
+  // temp size = 0
   nvcompBatchedSnappyDecompressGetTempSize(batch_size, chunk_size, &decomp_temp_bytes);
   void * device_decomp_temp;
   cudaMalloc(&device_decomp_temp, decomp_temp_bytes);
@@ -164,6 +175,7 @@ void execute_example(char* input_data, const size_t in_bytes)
       device_uncompressed_ptrs, 
       device_statuses, 
       stream);
+    // nvcompBatchedSnappyDecompressAsync() -> gpu_unsnap() -> unsnap_kernel<<<>>>() -> do_unsnap()
   
     auto stop_decompress = high_resolution_clock::now();
 
@@ -184,7 +196,8 @@ void execute_example(char* input_data, const size_t in_bytes)
 int main()
 {
 
-    std::ifstream inputFile("../../enwik8",  std::ios::binary);
+  // read input file + format input data 
+    std::ifstream inputFile("/content/enwik8",  std::ios::binary);
     if (!inputFile) {
         std::cerr << "Error opening file" << std::endl;
         return 1;
