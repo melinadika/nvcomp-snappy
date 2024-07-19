@@ -123,9 +123,9 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cerr << "Failed compression!" << std::endl;
     assert(comp_res == nvcompSuccess);
   }
-    duration = duration_cast<milliseconds>(stop_compress- start_compress);
-    total_time += duration.count();
-    std::cout << "compression time: " << duration.count() << "ms" << std::endl;
+    duration = duration_cast<microseconds>(stop_compress- start_compress);
+    total_time += duration_cast<milliseconds>(stop_compress- start_compress);
+    std::cout << "compression time: " << duration.count() << "µs" << std::endl;
 
     auto start_decompress = high_resolution_clock::now();
   // Decompression can be similarly performed on a batch of multiple compressed input chunks. 
@@ -184,9 +184,9 @@ void execute_example(char* input_data, const size_t in_bytes)
     std::cerr << "Failed compression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
-  duration = duration_cast<milliseconds>(stop_decompress- start_decompress);
-  total_time += duration.count();
-  std::cout << "decompression time: " << duration.count() << "ms" << std::endl;
+  duration = duration_cast<microseconds>(stop_decompress- start_decompress);
+  total_time += duration_cast<milliseconds>(stop_decompress- start_decompress);;
+  std::cout << "decompression time: " << duration.count() << "µs" << std::endl;
   std::cout << "total time: " << total_time << "ms" << std::endl;
 
 
