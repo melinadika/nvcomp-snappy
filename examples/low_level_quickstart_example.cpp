@@ -97,7 +97,7 @@ void execute_example(char* input_data, const size_t in_bytes)
   cudaMalloc((void**)&device_compressed_bytes, sizeof(size_t) * batch_size);
 
     auto stop_setup = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop_setup - start_setup);
+    auto duration = duration_cast<milliseconds>(stop_setup - start_setup);
     auto total_time = duration.count();
     std::cout << "setup time: " << duration.count() << "ms" << std::endl;
 
