@@ -144,6 +144,8 @@ std::cout << "hello" << std::endl;
             device_uncompressed_ptrs[i],
             chunk_size,
             cudaMemcpyDeviceToHost), "Error copying data from device to host");
+    std::cout << i << std::endl;
+
     }
     checkCudaError(cudaStreamSynchronize(stream), "Error synchronizing stream after copy");
     
