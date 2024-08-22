@@ -133,12 +133,14 @@ std::cout << "hello" << std::endl;
 
   // Copy decompressed data back to host
   for (size_t i = 0; i < batch_size; ++i) {
-    cudaMemcpy(
-        host_uncompressed_ptrs[i],
-        device_uncompressed_ptrs[i],
-        chunk_size,
-        cudaMemcpyDeviceToHost);
-  }
+        checkCudaError(cudaMemcpy(
+            host_uncompressed_ptrs[i],
+            device_uncompressed_ptrs[i],
+            chunk_size,
+            cudaMemcpyDeviceToHost), "Error copying data from device to host");
+    }
+    checkCudaError(cudaStreamSynchronize(stream), "Error synchronizing stream after copy");
+    
   std::cout << "hello" << std::endl;
 
   auto stop_copy = high_resolution_clock::now();
