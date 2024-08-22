@@ -9,7 +9,12 @@
 #include <string>
 
 using namespace std::chrono;
-
+void checkCudaError(cudaError_t err, const char* msg) {
+    if (err != cudaSuccess) {
+        std::cerr << msg << ": " << cudaGetErrorString(err) << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
 void execute_example(char* compressed_data, const size_t compressed_size)
 {
   auto start_setup = high_resolution_clock::now();
