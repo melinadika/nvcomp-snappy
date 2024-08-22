@@ -1,17 +1,18 @@
-#include <random>
-#include <assert.h>
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <sstream>
-
 #include "nvcomp/snappy.h"
+#include <assert.h>
 #include <chrono>
+#include <cuda_runtime.h>
+#include <fstream>
+#include <iostream>
+#include <random>
+#include <sstream>
+#include <string>
+
 using namespace std::chrono;
 
 void execute_example(char* compressed_data, const size_t compressed_size)
 {
-   auto start_setup = high_resolution_clock::now();
+  auto start_setup = high_resolution_clock::now();
 
   // allows for concurrent cuda processes
   cudaStream_t stream;
@@ -24,7 +25,12 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   // Allocate device memory for compressed data
   char* device_compressed_data;
   cudaMalloc((void**)&device_compressed_data, compressed_size);
-  cudaMemcpyAsync(device_compressed_data, compressed_data, compressed_size, cudaMemcpyHostToDevice, stream);
+  cudaMemcpyAsync(
+      device_compressed_data,
+      compressed_data,
+      compressed_size,
+      cudaMemcpyHostToDevice,
+      stream);
 
   // Set up data structures
   size_t* device_compressed_bytes;
@@ -37,37 +43,63 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   void** host_compressed_ptrs;
   cudaMallocHost((void**)&host_compressed_bytes, sizeof(size_t) * batch_size);
   cudaMallocHost((void**)&host_compressed_ptrs, sizeof(size_t) * batch_size);
-  
+
   for (size_t i = 0; i < batch_size; ++i) {
-    host_compressed_bytes[i] = (i + 1 < batch_size) ? chunk_size : compressed_size - (chunk_size * i);
+    host_compressed_bytes[i] = (i + 1 < batch_size)
+                                   ? chunk_size
+                                   : compressed_size - (chunk_size * i);
     host_compressed_ptrs[i] = device_compressed_data + chunk_size * i;
   }
-  
-  cudaMemcpyAsync(device_compressed_bytes, host_compressed_bytes, sizeof(size_t) * batch_size, cudaMemcpyHostToDevice, stream);
-  cudaMemcpyAsync(device_compressed_ptrs, host_compressed_ptrs, sizeof(size_t) * batch_size, cudaMemcpyHostToDevice, stream);
+
+  cudaMemcpyAsync(
+      device_compressed_bytes,
+      host_compressed_bytes,
+      sizeof(size_t) * batch_size,
+      cudaMemcpyHostToDevice,
+      stream);
+  cudaMemcpyAsync(
+      device_compressed_ptrs,
+      host_compressed_ptrs,
+      sizeof(size_t) * batch_size,
+      cudaMemcpyHostToDevice,
+      stream);
 
   // Allocate temporary workspace for decompression
   size_t decomp_temp_bytes;
-  nvcompBatchedSnappyDecompressGetTempSize(batch_size, chunk_size, &decomp_temp_bytes);
+  nvcompBatchedSnappyDecompressGetTempSize(
+      batch_size, chunk_size, &decomp_temp_bytes);
   void* device_decomp_temp;
   cudaMalloc(&device_decomp_temp, decomp_temp_bytes);
 
-  // Allocate space for decompressed data
+  // Allocate space for decompressed data on device
   size_t* device_uncompressed_bytes;
   void** device_uncompressed_ptrs;
   cudaMalloc((void**)&device_uncompressed_bytes, sizeof(size_t) * batch_size);
   cudaMalloc((void**)&device_uncompressed_ptrs, sizeof(size_t) * batch_size);
 
-  cudaMallocHost((void**)&host_compressed_ptrs, sizeof(size_t) * batch_size);
+  // Allocate space for decompressed data on host
+  size_t* host_uncompressed_bytes;
+  char** host_uncompressed_ptrs;
+  cudaMallocHost((void**)&host_uncompressed_bytes, sizeof(size_t) * batch_size);
+  cudaMallocHost((void**)&host_uncompressed_ptrs, sizeof(char*) * batch_size);
   for (size_t i = 0; i < batch_size; ++i) {
-      cudaMalloc(&host_compressed_ptrs[i], chunk_size);
+    host_uncompressed_ptrs[i] = (char*)malloc(chunk_size);
   }
 
-  cudaMemcpyAsync(device_uncompressed_ptrs, host_compressed_ptrs, sizeof(size_t) * batch_size, cudaMemcpyHostToDevice, stream);
+  cudaMemcpyAsync(
+      device_uncompressed_ptrs,
+      host_uncompressed_ptrs,
+      sizeof(size_t) * batch_size,
+      cudaMemcpyHostToDevice,
+      stream);
 
   // Allocate statuses
   nvcompStatus_t* device_statuses;
   cudaMalloc(&device_statuses, sizeof(nvcompStatus_t) * batch_size);
+
+  auto stop_setup = high_resolution_clock::now();
+  auto duration = duration_cast<microseconds>(stop_setup - start_setup);
+  std::cout << "Setup time: " << duration.count() << "µs" << std::endl;
 
   // Perform decompression
   auto start_decompress = high_resolution_clock::now();
@@ -87,14 +119,41 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   cudaStreamSynchronize(stream);
 
   auto stop_decompress = high_resolution_clock::now();
-  auto duration = duration_cast<microseconds>(stop_decompress - start_decompress);
+  duration = duration_cast<microseconds>(stop_decompress - start_decompress);
   std::cout << "Decompression time: " << duration.count() << "µs" << std::endl;
 
-  if (decomp_res != nvcompSuccess)
-  {
+  if (decomp_res != nvcompSuccess) {
     std::cerr << "Failed decompression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
+
+  auto start_copy = high_resolution_clock::now();
+
+  // Copy decompressed data back to host
+  for (size_t i = 0; i < batch_size; ++i) {
+    cudaMemcpy(
+        host_uncompressed_ptrs[i],
+        device_uncompressed_ptrs[i],
+        chunk_size,
+        cudaMemcpyDeviceToHost);
+  }
+  auto stop_copy = high_resolution_clock::now();
+  duration = duration_cast<microseconds>(stop_copy - start_copy);
+  std::cout << "Copy back time: " << duration.count() << "µs" << std::endl;
+
+
+  // Print the first 25 characters of the decompressed data
+  std::cout << "First 25 characters of the decompressed data: ";
+  for (size_t i = 0; i < batch_size; ++i) {
+    std::cout.write(
+        host_uncompressed_ptrs[i], std::min(chunk_size, size_t(25)));
+    if (25 <= chunk_size) {
+      break; // Exit loop once the first 25 characters have been printed
+    }
+  }
+  std::cout << std::endl;
+
+  auto start_cleanup = high_resolution_clock::now();
 
   // Cleanup
   cudaFree(device_compressed_data);
@@ -106,8 +165,17 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   cudaFree(device_statuses);
   cudaFreeHost(host_compressed_bytes);
   cudaFreeHost(host_compressed_ptrs);
+  for (size_t i = 0; i < batch_size; ++i) {
+    free(host_uncompressed_ptrs[i]);
+  }
+  cudaFreeHost(host_uncompressed_bytes);
+  cudaFreeHost(host_uncompressed_ptrs);
 
   cudaStreamDestroy(stream);
+  auto stop_cleanup = high_resolution_clock::now();
+  duration = duration_cast<microseconds>(stop_cleanup - start_cleanup);
+  std::cout << "cleanup time: " << duration.count() << "µs" << std::endl;
+
 }
 
 int main(int argc, char** argv)
