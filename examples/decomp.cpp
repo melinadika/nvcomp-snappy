@@ -138,6 +138,7 @@ std::cout << "hello" << std::endl;
 
   // Copy decompressed data back to host
   for (size_t i = 0; i < batch_size; ++i) {
+    std::cout << i << std::endl;
         checkCudaError(cudaMemcpy(
             host_uncompressed_ptrs[i],
             device_uncompressed_ptrs[i],
