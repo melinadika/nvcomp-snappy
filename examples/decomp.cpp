@@ -122,10 +122,12 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   duration = duration_cast<microseconds>(stop_decompress - start_decompress);
   std::cout << "Decompression time: " << duration.count() << "µs" << std::endl;
 
+std::cout << "hello" << std::endl;
   if (decomp_res != nvcompSuccess) {
     std::cerr << "Failed decompression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
+std::cout << "hello" << std::endl;
 
   auto start_copy = high_resolution_clock::now();
 
@@ -137,6 +139,8 @@ void execute_example(char* compressed_data, const size_t compressed_size)
         chunk_size,
         cudaMemcpyDeviceToHost);
   }
+  std::cout << "hello" << std::endl;
+
   auto stop_copy = high_resolution_clock::now();
   duration = duration_cast<microseconds>(stop_copy - start_copy);
   std::cout << "Copy back time: " << duration.count() << "µs" << std::endl;
