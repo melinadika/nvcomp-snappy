@@ -126,9 +126,9 @@ duration = duration_cast<microseconds>(stop_setup - start_setup);
       cudaStreamSynchronize(stream),
       "Error synchronizing stream after decompression");
 
-  auto stop_decompress = high_resolution_clock::now();
-  duration = duration_cast<microseconds>(stop_decompress - start_decompress);
-  std::cout << "Decompression time: " << duration.count() << "µs" << std::endl;
+//   auto stop_decompress = high_resolution_clock::now();
+//   duration = duration_cast<microseconds>(stop_decompress - start_decompress);
+//   std::cout << "Decompression time: " << duration.count() << "µs" << std::endl;
 
   if (decomp_res != nvcompSuccess) {
     std::cerr << "Failed decompression!" << std::endl;
