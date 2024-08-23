@@ -104,7 +104,7 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   cudaMalloc(&device_statuses, sizeof(nvcompStatus_t) * batch_size);
 
   auto stop_setup = high_resolution_clock::now();
-  auto duration = duration_cast<microseconds>(stop_setup - start_setup);
+duration = duration_cast<microseconds>(stop_setup - start_setup);
   std::cout << "Setup time: " << duration.count() << "µs" << std::endl;
 
   // Perform decompression
