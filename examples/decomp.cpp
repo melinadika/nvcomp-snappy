@@ -160,9 +160,9 @@ void execute_example(char* compressed_data, const size_t compressed_size)
 
   checkCudaError(
       cudaStreamSynchronize(stream), "Error synchronizing stream after copy");
-  auto stop_copy = high_resolution_clock::now();
-  duration = duration_cast<microseconds>(stop_copy - start_copy);
-  std::cout << "Copy time: " << duration.count() << "µs" << std::endl;
+//   auto stop_copy = high_resolution_clock::now();
+//   duration = duration_cast<microseconds>(stop_copy - start_copy);
+//   std::cout << "Copy time: " << duration.count() << "µs" << std::endl;
 
   std::cout << "Data copy completed." << std::endl;
 
