@@ -127,8 +127,7 @@ duration = duration_cast<microseconds>(stop_setup - start_setup);
       "Error synchronizing stream after decompression");
 
   auto stop_decompress = high_resolution_clock::now();
-  auto duration
-      = duration_cast<microseconds>(stop_decompress - start_decompress);
+  duration = duration_cast<microseconds>(stop_decompress - start_decompress);
   std::cout << "Decompression time: " << duration.count() << "µs" << std::endl;
 
   if (decomp_res != nvcompSuccess) {
