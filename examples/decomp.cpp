@@ -9,6 +9,7 @@
 #include <string>
 
 using namespace std::chrono;
+
 void checkCudaError(cudaError_t err, const char* msg)
 {
   if (err != cudaSuccess) {
@@ -103,9 +104,9 @@ void execute_example(char* compressed_data, const size_t compressed_size)
   nvcompStatus_t* device_statuses;
   cudaMalloc(&device_statuses, sizeof(nvcompStatus_t) * batch_size);
 
-  auto stop_setup = high_resolution_clock::now();
-duration = duration_cast<microseconds>(stop_setup - start_setup);
-  std::cout << "Setup time: " << duration.count() << "µs" << std::endl;
+//   auto stop_setup = high_resolution_clock::now();
+// duration = duration_cast<microseconds>(stop_setup - start_setup);
+//   std::cout << "Setup time: " << duration.count() << "µs" << std::endl;
 
   // Perform decompression
   auto start_decompress = high_resolution_clock::now();
