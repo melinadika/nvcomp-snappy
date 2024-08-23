@@ -9,11 +9,12 @@
 #include <string>
 
 using namespace std::chrono;
-void checkCudaError(cudaError_t err, const char* msg) {
-    if (err != cudaSuccess) {
-        std::cerr << msg << ": " << cudaGetErrorString(err) << std::endl;
-        exit(EXIT_FAILURE);
-    }
+void checkCudaError(cudaError_t err, const char* msg)
+{
+  if (err != cudaSuccess) {
+    std::cerr << msg << ": " << cudaGetErrorString(err) << std::endl;
+    exit(EXIT_FAILURE);
+  }
 }
 void execute_example(char* compressed_data, const size_t compressed_size)
 {
@@ -121,40 +122,49 @@ void execute_example(char* compressed_data, const size_t compressed_size)
       device_statuses,
       stream);
 
-  cudaStreamSynchronize(stream);
+  checkCudaError(
+      cudaStreamSynchronize(stream),
+      "Error synchronizing stream after decompression");
 
   auto stop_decompress = high_resolution_clock::now();
-  duration = duration_cast<microseconds>(stop_decompress - start_decompress);
+  auto duration
+      = duration_cast<microseconds>(stop_decompress - start_decompress);
   std::cout << "Decompression time: " << duration.count() << "µs" << std::endl;
 
-std::cout << "hello" << std::endl;
   if (decomp_res != nvcompSuccess) {
     std::cerr << "Failed decompression!" << std::endl;
     assert(decomp_res == nvcompSuccess);
   }
-std::cout << "hello" << std::endl;
 
-  auto start_copy = high_resolution_clock::now();
+  std::cout << "Starting data copy..." << std::endl;
 
   // Copy decompressed data back to host
+  auto start_copy = high_resolution_clock::now();
   for (size_t i = 0; i < batch_size; ++i) {
-    std::cout << i << std::endl;
-        checkCudaError(cudaMemcpy(
-            host_uncompressed_ptrs[i],
-            device_uncompressed_ptrs[i],
-            chunk_size,
-            cudaMemcpyDeviceToHost), "Error copying data from device to host");
-    std::cout << i << std::endl;
+    std::cout << "Copy iteration: " << i << std::endl;
 
+    cudaError_t copy_result = cudaMemcpy(
+        host_uncompressed_ptrs[i],
+        device_uncompressed_ptrs[i],
+        chunk_size,
+        cudaMemcpyDeviceToHost);
+
+    if (copy_result != cudaSuccess) {
+      std::cerr << "Error copying data from device to host at iteration " << i
+                << ": " << cudaGetErrorString(copy_result) << std::endl;
+      exit(EXIT_FAILURE);
     }
-    checkCudaError(cudaStreamSynchronize(stream), "Error synchronizing stream after copy");
-    
-  std::cout << "hello" << std::endl;
 
+    std::cout << "Completed copy iteration: " << i << std::endl;
+  }
+
+  checkCudaError(
+      cudaStreamSynchronize(stream), "Error synchronizing stream after copy");
   auto stop_copy = high_resolution_clock::now();
   duration = duration_cast<microseconds>(stop_copy - start_copy);
-  std::cout << "Copy back time: " << duration.count() << "µs" << std::endl;
+  std::cout << "Copy time: " << duration.count() << "µs" << std::endl;
 
+  std::cout << "Data copy completed." << std::endl;
 
   // Print the first 25 characters of the decompressed data
   std::cout << "First 25 characters of the decompressed data: ";
@@ -166,8 +176,6 @@ std::cout << "hello" << std::endl;
     }
   }
   std::cout << std::endl;
-
-  auto start_cleanup = high_resolution_clock::now();
 
   // Cleanup
   cudaFree(device_compressed_data);
@@ -186,10 +194,6 @@ std::cout << "hello" << std::endl;
   cudaFreeHost(host_uncompressed_ptrs);
 
   cudaStreamDestroy(stream);
-  auto stop_cleanup = high_resolution_clock::now();
-  duration = duration_cast<microseconds>(stop_cleanup - start_cleanup);
-  std::cout << "cleanup time: " << duration.count() << "µs" << std::endl;
-
 }
 
 int main(int argc, char** argv)
